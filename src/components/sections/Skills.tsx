@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { useState } from "react";
 import { skills } from "@/data/content";
 import { play } from "@/lib/sound";
 import Reveal from "../Reveal";
@@ -15,131 +15,146 @@ const GROUP_COLORS: Record<string, string> = {
   "AI / ML": "#9B6BF2",
 };
 
+const GROUPS = Object.keys(skills);
 const ALL = Object.entries(skills).flatMap(([group, items]) =>
-  items.map((name) => ({ name, group }))
+  items.map((name) => ({ name, group, index: GROUPS.indexOf(group) + 1 }))
 );
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 export default function Skills() {
-  const [filter, setFilter] = useState("All");
-  const [order, setOrder] = useState(ALL.map((s) => s.name));
-  const [picked, setPicked] = useState<string | null>(null);
-  const box = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<string | null>(null);
+  const [locked, setLocked] = useState<string | null>(null);
+  const active = hover ?? locked;
 
-  const visible = useMemo(
-    () =>
-      order
-        .map((n) => ALL.find((s) => s.name === n)!)
-        .filter((s) => filter === "All" || s.group === filter),
-    [order, filter]
-  );
-
-  const shuffle = () => {
-    play("pop");
-    setOrder((o) => [...o].sort(() => Math.random() - 0.5));
+  const select = (g: string) => {
+    play("click");
+    setLocked((l) => (l === g ? null : g));
   };
-
-  const tabs = ["All", ...Object.keys(skills)];
-  const pickedSkill = ALL.find((s) => s.name === picked);
 
   return (
     <Section
       id="skills"
       title="Skills"
-      hint="Pick 'n' mix. Filter, shuffle, or drag the pieces around."
+      hint="Hover or select a discipline to see what's in it."
     >
-      <Reveal>
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <LayoutGroup id="skill-tabs">
-            {tabs.map((t) => (
-              <button
-                key={t}
-                onClick={() => {
-                  play("click");
-                  setFilter(t);
-                }}
-                className="relative rounded-full px-4 py-2 text-sm"
-              >
-                {filter === t && (
-                  <motion.span
-                    layoutId="skill-tab"
-                    className="absolute inset-0 rounded-full bg-[var(--ink)]"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span
-                  className={`relative ${
-                    filter === t ? "text-[var(--bg)]" : "text-[var(--muted)]"
-                  }`}
-                >
-                  {t}
-                </span>
-              </button>
-            ))}
-          </LayoutGroup>
-          <motion.button
-            whileTap={{ rotate: 180, scale: 0.9 }}
-            onClick={shuffle}
-            className="ml-auto rounded-full border border-[var(--line)] bg-[var(--card)] px-4 py-2 font-mono text-xs"
+      <div className="grid grid-cols-1 gap-10 md:grid-cols-[240px_minmax(0,1fr)] md:gap-16">
+        {/* Index of disciplines */}
+        <Reveal className="min-w-0 md:sticky md:top-28 md:self-start">
+          <p className="mb-6 hidden text-sm leading-relaxed text-[var(--muted)] md:block">
+            {ALL.length} tools across {GROUPS.length} disciplines, used in
+            production.
+          </p>
+          <ul
+            className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-2 md:mx-0 md:block md:overflow-visible md:px-0 md:pb-0"
+            onMouseLeave={() => setHover(null)}
           >
-            ⤮ Shuffle
-          </motion.button>
-        </div>
-
-        <div
-          ref={box}
-          className="relative min-h-[260px] overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--card)] p-6"
-        >
-          <motion.div layout className="flex flex-wrap gap-3">
-            <AnimatePresence mode="popLayout">
-              {visible.map((s, i) => {
-                const c = GROUP_COLORS[s.group];
-                return (
-                  <motion.button
-                    key={s.name}
-                    layout
-                    drag
-                    dragConstraints={box}
-                    dragElastic={0.25}
-                    dragSnapToOrigin
-                    initial={{ opacity: 0, scale: 0.4, rotate: -20 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, scale: 0.4, rotate: 20 }}
-                    whileHover={{ y: -3, rotate: i % 2 ? 3 : -3 }}
-                    whileDrag={{ scale: 1.15, rotate: 8, zIndex: 20, cursor: "grabbing" }}
-                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                    onTap={() => {
-                      play("pop");
-                      setPicked(s.name);
-                    }}
-                    onDragStart={() => play("click")}
-                    className="flex cursor-grab items-center gap-2 rounded-full py-2.5 pl-2.5 pr-4 text-sm font-medium text-white shadow-[inset_0_-3px_0_rgba(0,0,0,0.2),0_6px_14px_-6px_rgba(0,0,0,0.4)]"
-                    style={{ background: c }}
+            {GROUPS.map((g, i) => {
+              const on = active === g;
+              const color = GROUP_COLORS[g];
+              return (
+                <li key={g} className="shrink-0">
+                  <button
+                    onClick={() => select(g)}
+                    onMouseEnter={() => setHover(g)}
+                    aria-pressed={locked === g}
+                    className="group relative flex w-full items-baseline gap-3 whitespace-nowrap rounded-full border border-[var(--line)] px-4 py-2 text-left md:rounded-none md:border-0 md:border-b md:px-0 md:py-3.5"
                   >
-                    <span className="h-3 w-3 rounded-full bg-white/60" />
-                    {s.name}
-                  </motion.button>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
+                    <span
+                      className="font-mono text-[11px] transition-colors"
+                      style={{ color: on ? color : "var(--muted)" }}
+                    >
+                      {pad(i + 1)}
+                    </span>
+                    <span
+                      className={`text-[15px] transition-colors ${
+                        on ? "text-[var(--ink)]" : "text-[var(--muted)]"
+                      }`}
+                    >
+                      {g}
+                    </span>
+                    <span className="ml-auto hidden font-mono text-[11px] text-[var(--muted)] md:inline">
+                      {skills[g].length}
+                    </span>
+                    <motion.span
+                      className="absolute -bottom-px left-0 hidden h-px md:block"
+                      style={{ background: color }}
+                      initial={false}
+                      animate={{ width: on ? "100%" : "0%" }}
+                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </Reveal>
 
-          <div className="pointer-events-none absolute inset-x-6 bottom-4 flex items-end justify-between font-mono text-[11px] text-[var(--muted)]">
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={pickedSkill?.name ?? "none"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
-                {pickedSkill
-                  ? `✦ ${pickedSkill.name} · ${pickedSkill.group}`
-                  : "Tap a piece to inspect it"}
-              </motion.span>
-            </AnimatePresence>
-            <span>{visible.length} in stock</span>
-          </div>
+        {/* Type specimen */}
+        <div className="min-w-0">
+          <p className="text-[22px] font-medium leading-[1.55] tracking-tight sm:text-[34px] sm:leading-[1.5]">
+            {ALL.map((s, i) => {
+              const dim = active !== null && active !== s.group;
+              const lit = active === s.group;
+              return (
+                <motion.span
+                  key={s.name}
+                  initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{
+                    duration: 0.6,
+                    delay: i * 0.018,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="inline-block"
+                >
+                  <span
+                    data-lit={lit}
+                    onMouseEnter={() => setHover(s.group)}
+                    onMouseLeave={() => setHover(null)}
+                    className="cursor-default transition-[color,opacity] duration-300"
+                    style={{
+                      color: lit || !active ? "var(--ink)" : "var(--muted)",
+                      opacity: dim ? 0.28 : 1,
+                    }}
+                  >
+                    {s.name}
+                    <sup
+                      className="ml-0.5 font-mono text-[10px] font-normal tracking-normal transition-colors duration-300 sm:text-[11px]"
+                      style={{
+                        color: lit ? GROUP_COLORS[s.group] : "var(--muted)",
+                      }}
+                    >
+                      {pad(s.index)}
+                    </sup>
+                  </span>
+                  {i < ALL.length - 1 && (
+                    <span
+                      className="mx-2 font-light text-[var(--line)] sm:mx-3.5"
+                      aria-hidden
+                    >
+                      /
+                    </span>
+                  )}
+                </motion.span>
+              );
+            })}
+          </p>
+
+          <Reveal delay={0.2} className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--line)] pt-5 font-mono text-[11px] uppercase tracking-widest text-[var(--muted)]">
+            {GROUPS.map((g, i) => (
+              <span key={g} className="flex items-center gap-2">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: GROUP_COLORS[g] }}
+                />
+                {pad(i + 1)} {g}
+              </span>
+            ))}
+          </Reveal>
         </div>
-      </Reveal>
+      </div>
     </Section>
   );
 }
