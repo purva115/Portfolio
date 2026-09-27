@@ -8,7 +8,7 @@ export const profile = {
   email: "pjagtap1@uncc.edu",
   phone: "+1 (704) 248-1900",
   github: "https://github.com/purva115",
-  linkedin: "https://linkedin.com/in/purva-jagtap",
+  linkedin: "https://www.linkedin.com/in/purva-jagtap-7646621b3/",
   resume: "/Purva_Jagtap_Resume.pdf",
 };
 
