@@ -1,7 +1,12 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { experience } from "@/data/content";
 import { play } from "@/lib/sound";
 import Reveal from "../Reveal";
@@ -12,6 +17,13 @@ const BARS = Array.from({ length: 48 }, (_, i) => ((i * 7919) % 5) + 1);
 
 export default function Experience() {
   const [open, setOpen] = useState<number | null>(0);
+  const reduce = useReducedMotion();
+  const printer = useRef<HTMLDivElement>(null);
+  const printed = useInView(printer, { once: true, margin: "0px 0px -15% 0px" });
+
+  useEffect(() => {
+    if (printed && !reduce) play("print");
+  }, [printed, reduce]);
 
   return (
     <Section
@@ -42,16 +54,16 @@ export default function Experience() {
           </div>
         </Reveal>
 
-        <div className="relative">
+        {/* Visibility is observed on this unclipped wrapper: a fully clipped
+            element can report zero intersection and never start printing. */}
+        <div ref={printer} className="relative">
           {/* Printer slot */}
           <div className="relative z-10 mx-auto h-4 w-[calc(100%+24px)] -translate-x-3 rounded-full bg-[var(--machine)] shadow-lg" />
           <motion.div
-            initial={{ clipPath: "inset(0 0 100% 0)", y: -30 }}
-            whileInView={{ clipPath: "inset(0 0 0% 0)", y: 0 }}
-            viewport={{ once: true, margin: "-120px" }}
-            onViewportEnter={() => play("print")}
+            initial={reduce ? false : { clipPath: "inset(0 0 100% 0)", y: -30 }}
+            animate={printed ? { clipPath: "inset(0 0 0% 0)", y: 0 } : undefined}
             transition={{ duration: 1.8, ease: [0.45, 0, 0.2, 1] }}
-            className="receipt -mt-2 px-7 pb-10 pt-8 font-mono text-[13px]"
+            className="receipt -mt-2 px-5 pb-10 pt-8 font-mono text-[13px] sm:px-7"
           >
             <div className="text-center">
               <div className="text-base font-bold tracking-[0.3em]">
@@ -84,8 +96,11 @@ export default function Experience() {
                       <span className="block opacity-60">
                         @ {job.org} · {job.place}
                       </span>
+                      <span className="mt-1 block text-[11px] opacity-70 sm:hidden">
+                        {job.date}
+                      </span>
                     </span>
-                    <span className="whitespace-nowrap text-right text-[11px] opacity-70">
+                    <span className="hidden whitespace-nowrap text-right text-[11px] opacity-70 sm:inline">
                       {job.date.replace("Present", "NOW")}
                     </span>
                     <motion.span
