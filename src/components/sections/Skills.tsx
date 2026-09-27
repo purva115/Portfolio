@@ -20,7 +20,12 @@ export default function Skills() {
   const groups = Object.entries(skills);
 
   return (
-    <Section id="skills" title="Skills" hint="Hover a row to focus it.">
+    <Section
+      id="skills"
+      title="Skills"
+      hint="Hover a row to focus it."
+      hintClassName="hidden [@media(hover:hover)]:block"
+    >
       <ul
         className="border-b border-[var(--line)]"
         onMouseLeave={() => setActive(null)}

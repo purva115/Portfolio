@@ -5,10 +5,12 @@ function Heading({
   id,
   title,
   hint,
+  hintClassName = "",
 }: {
   id: string;
   title: string;
   hint?: string;
+  hintClassName?: string;
 }) {
   const snack = snacks.find((s) => s.id === id)!;
   return (
@@ -26,7 +28,7 @@ function Heading({
         <span className="h-px flex-1 bg-[var(--line)]" />
       </div>
       {hint && (
-        <p className="mt-3 pl-[52px] font-mono text-xs text-[var(--muted)]">
+        <p className={`mt-3 pl-[52px] font-mono text-xs text-[var(--muted)] ${hintClassName}`}>
           {hint}
         </p>
       )}
@@ -38,16 +40,18 @@ export function Section({
   id,
   title,
   hint,
+  hintClassName,
   children,
 }: {
   id: string;
   title: string;
   hint?: string;
+  hintClassName?: string;
   children: React.ReactNode;
 }) {
   return (
     <section id={id} className="mx-auto max-w-5xl scroll-mt-20 px-6 py-24">
-      <Heading id={id} title={title} hint={hint} />
+      <Heading id={id} title={title} hint={hint} hintClassName={hintClassName} />
       {children}
     </section>
   );
