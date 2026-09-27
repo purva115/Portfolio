@@ -12,10 +12,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "Full stack software engineer in Charlotte, NC with 3+ years shipping backend services, data pipelines, and LLM-powered applications.";
+
 export const metadata: Metadata = {
-  title: "Purva Jagtap · Full Stack Developer",
-  description:
-    "Full stack developer in Charlotte, NC building backend systems, cloud infrastructure, and data pipelines.",
+  metadataBase: new URL("https://aboutpurva.work"),
+  title: "Purva Jagtap · Full Stack Software Engineer",
+  description,
+  openGraph: {
+    title: "Purva Jagtap · Full Stack Software Engineer",
+    description,
+    url: "https://aboutpurva.work",
+    siteName: "Purva Jagtap",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Purva Jagtap · Full Stack Software Engineer",
+    description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
